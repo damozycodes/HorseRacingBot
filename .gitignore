@@ -1,5 +1,14 @@
 
+__pycache__
+*.joblib
 *.env
 *.csv
 env
 Doc.txt
+
+results
+racecards
+derived
+results.zip
+
+
