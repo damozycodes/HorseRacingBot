@@ -16,8 +16,14 @@ from collections import defaultdict
 import warnings
 warnings.filterwarnings('ignore')
 
-CSV_FOLDER = os.getenv("CSV_FOLDER", r"C:\Users\damozy\Projects\HorseRacingBot\results")
-OUTPUT_DIR = CSV_FOLDER
+# CSV_FOLDER = os.getenv("CSV_FOLDER", r"C:\Users\damozy\Projects\HorseRacingBot\results")
+# OUTPUT_DIR = CSV_FOLDER 
+# MODEL_PATH = os.path.join(OUTPUT_DIR, "racing_model.joblib")
+
+# Directory where this script is located
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+OUTPUT_DIR = SCRIPT_DIR  # or os.path.join(SCRIPT_DIR, "results") if you want a subfolder
 MODEL_PATH = os.path.join(OUTPUT_DIR, "racing_model.joblib")
 
 class HorseRacingPredictor:
