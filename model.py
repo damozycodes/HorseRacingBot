@@ -543,7 +543,7 @@ class HorseRacingPredictor:
         # Predict probabilities
         probabilities = self.model.predict_proba(X)[:, 1]
 
-        df['win_probability_normalized'] = df['win_probability'] / df['win_probability'].sum()
+        df['win_probability_normalized'] = df['win_probability'] / probabilities.sum()
         
         # Return as a DataFrame with horse identifiers
         horse_col = 'horse_name' if 'horse_name' in df.columns else 'horse'
