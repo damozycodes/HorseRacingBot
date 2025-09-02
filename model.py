@@ -478,9 +478,7 @@ class HorseRacingPredictor:
         y_pred = self.model.predict(X_test)
         y_pred_proba = self.model.predict_proba(X_test)[:, 1]
         
-        print("\n" + "="*50)
         print("DETAILED EVALUATION OF BEST MODEL")
-        print("="*50)
         print(classification_report(y_test, y_pred))
         
         return self.model, results
@@ -544,43 +542,22 @@ class HorseRacingPredictor:
         
         # Predict probabilities
         probabilities = self.model.predict_proba(X)[:, 1]
+
+        df['win_probability_normalized'] = df['win_probability'] / df['win_probability'].sum()
         
         # Return as a DataFrame with horse identifiers
         horse_col = 'horse_name' if 'horse_name' in df.columns else 'horse'
-        col = [horse_col, "race_id", "horse_id"]
+        col = [horse_col, "race_id", "horse_id", "win_probability_normalized"]
         result_df = df[col].copy()
-        result_df['win_probability'] = probabilities    
+        result_df['win_probability'] = probabilities 
+
+        # return race_df[[horse_col, 'horse_id', 'race_id', 'win_probability', 'win_probability_normalized']].sort_values(
+        #     'win_probability_normalized', ascending=False
+        # )   
         
-        return result_df
-    
-    def feature_importance(self):
-        """
-        Get feature importance from the trained model
-        """
-        if self.model is None:
-            raise ValueError("Model not trained yet.")
-        
-        # Get feature names after preprocessing
-        feature_names = (self.model.named_steps['preprocessor']
-                        .named_transformers_['num'].feature_names_in_.tolist() +
-                        self.model.named_steps['preprocessor']
-                        .named_transformers_['cat']
-                        .named_steps['onehot'].get_feature_names_out().tolist())
-        
-        # Get importance scores
-        if hasattr(self.model.named_steps['classifier'], 'feature_importances_'):
-            importances = self.model.named_steps['classifier'].feature_importances_
-            
-            # Create importance dataframe
-            importance_df = pd.DataFrame({
-                'feature': feature_names,
-                'importance': importances
-            }).sort_values('importance', ascending=False)
-            
-            return importance_df.head(20)
-        else:
-            print("Feature importance not available for this model type")
-            return None
+        return result_df.sort_values(
+            'win_probability_normalized', ascending=False
+        )
 
     def predict_race_probabilities(self, df, race_id):
         """
@@ -595,8 +572,6 @@ class HorseRacingPredictor:
         if race_df.empty:
             raise ValueError(f"No horses found for race_id {race_id}")
 
-        # if 'distance' in race_df.columns and 'dist_m' not in race_df.columns:
-        #     race_df['dist_m'] = race_df['distance'].str.replace('m', '').astype(float)  * 1609.34
         if 'dist_m' not in df.columns:
             if 'distance' in df.columns:
                 def parse_distance(d):
@@ -660,6 +635,35 @@ class HorseRacingPredictor:
         )
     
     
+    def feature_importance(self):
+        """
+        Get feature importance from the trained model
+        """
+        if self.model is None:
+            raise ValueError("Model not trained yet.")
+        
+        # Get feature names after preprocessing
+        feature_names = (self.model.named_steps['preprocessor']
+                        .named_transformers_['num'].feature_names_in_.tolist() +
+                        self.model.named_steps['preprocessor']
+                        .named_transformers_['cat']
+                        .named_steps['onehot'].get_feature_names_out().tolist())
+        
+        # Get importance scores
+        if hasattr(self.model.named_steps['classifier'], 'feature_importances_'):
+            importances = self.model.named_steps['classifier'].feature_importances_
+            
+            # Create importance dataframe
+            importance_df = pd.DataFrame({
+                'feature': feature_names,
+                'importance': importances
+            }).sort_values('importance', ascending=False)
+            
+            return importance_df.head(20)
+        else:
+            print("Feature importance not available for this model type")
+            return None
+    
 
     def save_model(self, path: str = MODEL_PATH):
         """
@@ -705,12 +709,6 @@ def usage():
     # View feature importance
     importance = predictor.feature_importance()
     print(importance)
-    
-    print("HorseRacingPredictor class ready to use!")
-    print("To use:")
-    print("1. Load your data with predictor.load_and_prepare_data(df)")
-    print("2. Train the model with predictor.train_model(df)")
-    print("3. Make predictions with predictor.predict_win_probability(new_data)")
 
 if __name__ == "__main__":
     usage()
